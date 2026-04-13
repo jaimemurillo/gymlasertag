@@ -1,0 +1,526 @@
+
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .app { max-width: 420px; margin: 0 auto; padding: 1rem; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .header { text-align: center; padding: 1.5rem 0 1rem; }
+  .header h1 { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .header p { font-size: 14px; color: var(--color-text-secondary); margin-top: 4px; }
+
+  .avatar-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 500; flex-shrink: 0;
+  }
+
+  .card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 12px;
+  }
+
+  .btn {
+    display: block; width: 100%; padding: 10px 16px;
+    font-size: 15px; font-weight: 500; text-align: center;
+    border-radius: var(--border-radius-md); cursor: pointer;
+    border: 0.5px solid var(--color-border-secondary);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    transition: background 0.15s;
+    margin-bottom: 10px;
+  }
+  .btn:hover { background: var(--color-background-secondary); }
+  .btn.primary {
+    background: #533AB7; color: #fff; border-color: #533AB7;
+  }
+  .btn.primary:hover { background: #3C3489; }
+  .btn.danger {
+    background: #E24B4A; color: #fff; border-color: #E24B4A;
+  }
+  .btn.danger:hover { background: #A32D2D; }
+  .btn.sm { font-size: 13px; padding: 7px 14px; width: auto; display: inline-block; margin-bottom: 0; }
+
+  .equipment-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 16px;
+  }
+  .equip-card {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 12px; cursor: pointer; text-align: center;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .equip-card:hover { border-color: var(--color-border-primary); }
+  .equip-card.occupied { border-color: #E24B4A; }
+  .equip-card.available { border-color: #639922; }
+  .equip-card.waiting { border-color: #EF9F27; }
+  .equip-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-top: 6px; }
+  .equip-status {
+    font-size: 11px; margin-top: 3px; font-weight: 500;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; margin-right: 4px;
+  }
+  .dot-green { background: #639922; }
+  .dot-red { background: #E24B4A; }
+  .dot-amber { background: #EF9F27; }
+
+  .user-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary);
+  }
+  .user-row:last-child { border-bottom: none; }
+  .user-info { flex: 1; }
+  .user-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .user-machine { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  .laser-btn {
+    padding: 6px 14px; font-size: 12px; font-weight: 500;
+    border-radius: var(--border-radius-md); cursor: pointer;
+    border: 0.5px solid #533AB7; color: #533AB7;
+    background: #EEEDFE; transition: all 0.15s;
+  }
+  .laser-btn:hover { background: #533AB7; color: #fff; }
+  .laser-btn.sent { background: #533AB7; color: #fff; border-color: #533AB7; opacity: 0.6; cursor: default; }
+
+  .notification-banner {
+    background: #EEEDFE; border: 0.5px solid #533AB7;
+    border-radius: var(--border-radius-md); padding: 12px 16px;
+    margin-bottom: 12px; display: none;
+  }
+  .notification-banner.show { display: block; }
+  .notif-title { font-size: 14px; font-weight: 500; color: #3C3489; }
+  .notif-sub { font-size: 12px; color: #534AB7; margin-top: 2px; }
+
+  .laser-pulse {
+    animation: pulse 0.6s ease-out;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .badge-purple { background: #EEEDFE; color: #3C3489; }
+  .badge-green { background: #EAF3DE; color: #3B6D11; }
+  .badge-amber { background: #FAEEDA; color: #854F0B; }
+  .badge-red { background: #FCEBEB; color: #791F1F; }
+
+  .timer { font-size: 13px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+
+  .laser-icon { font-size: 24px; }
+  .section-label { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; }
+
+  .my-station-card {
+    background: #EEEDFE; border: 0.5px solid #AFA9EC;
+    border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 16px;
+  }
+  .my-station-title { font-size: 13px; color: #534AB7; font-weight: 500; }
+  .my-station-name { font-size: 20px; font-weight: 500; color: #26215C; margin-top: 2px; }
+
+  .queue-count {
+    display: flex; align-items: center; gap: 6px; margin-top: 10px;
+  }
+
+  select, input[type=text] {
+    width: 100%; padding: 9px 12px; font-size: 14px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary); margin-bottom: 10px;
+    outline: none;
+  }
+
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; color: var(--color-text-secondary);
+    cursor: pointer; padding: 4px 0; margin-bottom: 16px;
+    border: none; background: none;
+  }
+  .back-btn:hover { color: var(--color-text-primary); }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #26215C; color: #EEEDFE; padding: 10px 20px;
+    border-radius: var(--border-radius-md); font-size: 14px;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; }
+
+  .tabs {
+    display: flex; gap: 0; border-bottom: 0.5px solid var(--color-border-tertiary);
+    margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1; padding: 10px; font-size: 13px; font-weight: 500;
+    text-align: center; cursor: pointer; color: var(--color-text-secondary);
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .tab.active { color: #533AB7; border-bottom-color: #533AB7; }
+</style>
+
+<div class="app">
+  <div id="screen-login" class="screen active">
+    <div class="header">
+      <div style="font-size:40px;margin-bottom:8px;">🏋️</div>
+      <h1>GymTag</h1>
+      <p>Avisa anónimamente cuando quieres una máquina</p>
+    </div>
+    <div class="card">
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;">Elige tu perfil para entrar</p>
+      <select id="login-select">
+        <option value="">— Selecciona tu usuario —</option>
+        <option value="alex">Alex G. (tú)</option>
+        <option value="maria">María L.</option>
+        <option value="carlos">Carlos R.</option>
+        <option value="diana">Diana M.</option>
+        <option value="jorge">Jorge P.</option>
+      </select>
+      <button class="btn primary" onclick="doLogin()">Entrar al gym</button>
+    </div>
+    <p style="font-size:12px;color:var(--color-text-secondary);text-align:center;margin-top:8px;">En producción usaría autenticación real. Esto es demo.</p>
+  </div>
+
+  <div id="screen-home" class="screen">
+    <div id="notif-banner" class="notification-banner">
+      <div class="notif-title">Alguien está esperando tu máquina</div>
+      <div class="notif-sub" id="notif-count"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:18px;font-weight:500;color:var(--color-text-primary);" id="home-name"></div>
+        <div style="font-size:13px;color:var(--color-text-secondary);">Bienvenido al gym</div>
+      </div>
+      <div id="home-avatar" class="avatar-circle" style="background:#EEEDFE;color:#3C3489;"></div>
+    </div>
+
+    <div id="my-station-section" style="display:none;">
+      <div class="my-station-card">
+        <div class="my-station-title">Tu estación actual</div>
+        <div class="my-station-name" id="my-station-name"></div>
+        <div class="queue-count">
+          <span class="status-dot dot-amber" id="queue-dot" style="display:none;"></span>
+          <span style="font-size:13px;color:#534AB7;" id="queue-msg"></span>
+        </div>
+        <button class="btn danger" style="margin-top:12px;margin-bottom:0;" onclick="leaveStation()">Dejar máquina</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('machines')">Máquinas</div>
+      <div class="tab" onclick="switchTab('users')">Usuarios activos</div>
+    </div>
+
+    <div id="tab-machines">
+      <p class="section-label">Equipo del gym</p>
+      <div class="equipment-grid" id="equip-grid"></div>
+    </div>
+
+    <div id="tab-users" style="display:none;">
+      <p class="section-label">Quién está en el gym</p>
+      <div id="users-list"></div>
+    </div>
+  </div>
+
+  <div id="screen-machine" class="screen">
+    <button class="back-btn" onclick="goHome()">← Volver</button>
+    <div id="machine-detail"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MACHINES = [
+  { id: 'squat', name: 'Rack de sentadillas', icon: '🏋️', color: 'purple' },
+  { id: 'bench', name: 'Banca de press', icon: '💪', color: 'teal' },
+  { id: 'cable', name: 'Máquina de cable', icon: '🔗', color: 'coral' },
+  { id: 'tread1', name: 'Caminadora 1', icon: '🏃', color: 'blue' },
+  { id: 'tread2', name: 'Caminadora 2', icon: '🏃', color: 'blue' },
+  { id: 'smith', name: 'Máquina Smith', icon: '⚡', color: 'amber' },
+  { id: 'leg', name: 'Prensa de piernas', icon: '🦵', color: 'pink' },
+  { id: 'row', name: 'Remo sentado', icon: '🚣', color: 'green' },
+];
+
+const USERS = [
+  { id: 'alex', name: 'Alex G.', initials: 'AG', color: '#EEEDFE', textColor: '#3C3489' },
+  { id: 'maria', name: 'María L.', initials: 'ML', color: '#E1F5EE', textColor: '#085041' },
+  { id: 'carlos', name: 'Carlos R.', initials: 'CR', color: '#FAECE7', textColor: '#4A1B0C' },
+  { id: 'diana', name: 'Diana M.', initials: 'DM', color: '#FBEAF0', textColor: '#4B1528' },
+  { id: 'jorge', name: 'Jorge P.', initials: 'JP', color: '#FAEEDA', textColor: '#412402' },
+];
+
+let state = {
+  currentUser: null,
+  occupiedBy: { squat: 'carlos', bench: 'maria', leg: 'jorge' },
+  lasers: {},
+  myStation: null,
+  startTimes: { squat: Date.now() - 12*60000, bench: Date.now() - 5*60000, leg: Date.now() - 22*60000 },
+  lasersSentByMe: {}
+};
+
+let timerInterval = null;
+
+function getUser(id) { return USERS.find(u => u.id === id); }
+function getMachine(id) { return MACHINES.find(m => m.id === id); }
+
+function doLogin() {
+  const sel = document.getElementById('login-select').value;
+  if (!sel) { showToast('Selecciona un usuario'); return; }
+  state.currentUser = sel;
+  showScreen('home');
+  renderHome();
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-machines').style.display = tab === 'machines' ? '' : 'none';
+  document.getElementById('tab-users').style.display = tab === 'users' ? '' : 'none';
+  if (tab === 'users') renderUsers();
+}
+
+function renderHome() {
+  const user = getUser(state.currentUser);
+  document.getElementById('home-name').textContent = user.name;
+  const av = document.getElementById('home-avatar');
+  av.textContent = user.initials;
+  av.style.background = user.color;
+  av.style.color = user.textColor;
+
+  const myS = state.myStation;
+  const sec = document.getElementById('my-station-section');
+  if (myS) {
+    sec.style.display = '';
+    document.getElementById('my-station-name').textContent = getMachine(myS).name;
+    updateMyStationQueue();
+  } else {
+    sec.style.display = 'none';
+  }
+
+  renderEquipGrid();
+  updateNotifBanner();
+
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    updateTimers();
+    updateMyStationQueue();
+    updateNotifBanner();
+  }, 1000);
+}
+
+function updateMyStationQueue() {
+  const myS = state.myStation;
+  if (!myS) return;
+  const lasersOnMine = Object.values(state.lasers[myS] || {}).filter(Boolean).length;
+  const dot = document.getElementById('queue-dot');
+  const msg = document.getElementById('queue-msg');
+  if (lasersOnMine > 0) {
+    dot.style.display = 'inline-block';
+    msg.textContent = lasersOnMine === 1 ? '1 persona esperando esta máquina' : lasersOnMine + ' personas esperando esta máquina';
+  } else {
+    dot.style.display = 'none';
+    msg.textContent = 'Nadie esperando por ahora';
+  }
+}
+
+function updateNotifBanner() {
+  if (!state.myStation) return;
+  const lasersOnMine = Object.values(state.lasers[state.myStation] || {}).filter(Boolean).length;
+  const banner = document.getElementById('notif-banner');
+  if (lasersOnMine > 0) {
+    banner.classList.add('show');
+    document.getElementById('notif-count').textContent = lasersOnMine === 1
+      ? '1 persona está esperando que termines'
+      : lasersOnMine + ' personas están esperando que termines';
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function renderEquipGrid() {
+  const grid = document.getElementById('equip-grid');
+  grid.innerHTML = '';
+  MACHINES.forEach(m => {
+    const occupant = state.occupiedBy[m.id];
+    const myLasersHere = (state.lasers[m.id] || {})[state.currentUser];
+    const queueCount = Object.values(state.lasers[m.id] || {}).filter(Boolean).length;
+    let statusClass = 'available';
+    let statusText = 'Libre';
+    let dotClass = 'dot-green';
+    if (occupant) {
+      statusClass = queueCount > 0 ? 'waiting' : 'occupied';
+      statusText = occupant === state.currentUser ? 'Tú' : 'Ocupada';
+      dotClass = queueCount > 0 ? 'dot-amber' : 'dot-red';
+    }
+    const card = document.createElement('div');
+    card.className = 'equip-card ' + statusClass;
+    card.innerHTML = `
+      <div style="font-size:24px;">${m.icon}</div>
+      <div class="equip-name">${m.name}</div>
+      <div class="equip-status">
+        <span class="status-dot ${dotClass}"></span>
+        <span style="color:${dotClass === 'dot-green' ? '#3B6D11' : dotClass === 'dot-red' ? '#791F1F' : '#854F0B'};">${statusText}</span>
+      </div>
+      ${queueCount > 0 ? `<div style="margin-top:4px;font-size:11px;color:#854F0B;">${queueCount} esperando</div>` : ''}
+    `;
+    card.onclick = () => openMachine(m.id);
+    grid.appendChild(card);
+  });
+}
+
+function updateTimers() {
+  renderEquipGrid();
+}
+
+function renderUsers() {
+  const list = document.getElementById('users-list');
+  list.innerHTML = '';
+  const activeUsers = USERS.filter(u => u.id !== state.currentUser);
+  activeUsers.forEach(u => {
+    const machineId = Object.keys(state.occupiedBy).find(k => state.occupiedBy[k] === u.id);
+    const machine = machineId ? getMachine(machineId) : null;
+    const alreadySent = machineId && (state.lasers[machineId] || {})[state.currentUser];
+    const row = document.createElement('div');
+    row.className = 'user-row';
+    row.innerHTML = `
+      <div class="avatar-circle" style="width:40px;height:40px;font-size:14px;background:${u.color};color:${u.textColor};">${u.initials}</div>
+      <div class="user-info">
+        <div class="user-name">${u.name}</div>
+        <div class="user-machine">${machine ? machine.icon + ' ' + machine.name : 'Sin máquina activa'}</div>
+      </div>
+      ${machine && machine.id !== state.myStation ? `
+        <button class="laser-btn ${alreadySent ? 'sent' : ''}" onclick="sendLaserFromUser('${machine.id}', this)" ${alreadySent ? 'disabled' : ''}>
+          ${alreadySent ? '⚡ Enviado' : '⚡ Tag'}
+        </button>` : ''}
+    `;
+    list.appendChild(row);
+  });
+}
+
+function openMachine(machineId) {
+  const m = getMachine(machineId);
+  const occupant = state.occupiedBy[machineId];
+  const isMine = occupant === state.currentUser;
+  const alreadySent = (state.lasers[machineId] || {})[state.currentUser];
+  const queueCount = Object.values(state.lasers[machineId] || {}).filter(Boolean).length;
+  const elapsed = state.startTimes[machineId] ? Math.floor((Date.now() - state.startTimes[machineId]) / 60000) : 0;
+  const detail = document.getElementById('machine-detail');
+  detail.innerHTML = `
+    <div style="text-align:center;padding:1.5rem 0 1rem;">
+      <div style="font-size:48px;">${m.icon}</div>
+      <h2 style="font-size:20px;font-weight:500;margin-top:8px;color:var(--color-text-primary);">${m.name}</h2>
+    </div>
+    <div class="card">
+      ${!occupant ? `
+        <div style="text-align:center;padding:8px 0;">
+          <span class="badge badge-green">Disponible ahora</span>
+        </div>
+        ${!isMine && !state.myStation ? `<button class="btn primary" style="margin-top:12px;" onclick="claimMachine('${machineId}')">Usar esta máquina</button>` : ''}
+      ` : `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          ${isMine
+            ? `<div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">Esta es tu máquina</div>`
+            : `<span class="badge badge-red">Ocupada · ${elapsed}min</span>`
+          }
+        </div>
+        ${queueCount > 0 ? `<div style="font-size:13px;color:#854F0B;margin-bottom:10px;">${queueCount} persona${queueCount > 1 ? 's' : ''} esperando</div>` : ''}
+        ${isMine ? `
+          <button class="btn danger" onclick="leaveStation()">Dejar esta máquina</button>
+        ` : `
+          ${alreadySent ? `
+            <div style="text-align:center;padding:12px;background:#EEEDFE;border-radius:var(--border-radius-md);">
+              <div style="font-size:24px;">⚡</div>
+              <div style="font-size:14px;font-weight:500;color:#3C3489;margin-top:4px;">Tag enviado</div>
+              <div style="font-size:12px;color:#534AB7;margin-top:2px;">La persona recibirá una notificación anónima</div>
+            </div>
+          ` : `
+            ${!state.myStation ? `<button class="btn primary" style="margin-bottom:10px;" onclick="claimWait('${machineId}')">Esperaré aquí</button>` : ''}
+            <button class="btn" id="laser-main-btn" onclick="sendLaserMain('${machineId}')">⚡ Mandar tag anónimo</button>
+            <p style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-top:6px;">La persona solo sabrá que alguien está esperando, no quién eres</p>
+          `}
+        `}
+      `}
+    </div>
+  `;
+  showScreen('machine');
+}
+
+function claimMachine(machineId) {
+  if (state.myStation) { showToast('Ya tienes una máquina activa'); return; }
+  state.occupiedBy[machineId] = state.currentUser;
+  state.startTimes[machineId] = Date.now();
+  state.myStation = machineId;
+  showToast('¡Máquina tomada!');
+  goHome();
+}
+
+function claimWait(machineId) {
+  state.myStation = machineId;
+  state.occupiedBy[machineId] = state.currentUser;
+  state.startTimes[machineId] = Date.now();
+  showToast('Estás en la máquina');
+  goHome();
+}
+
+function leaveStation() {
+  if (!state.myStation) return;
+  const m = state.myStation;
+  delete state.occupiedBy[m];
+  delete state.startTimes[m];
+  if (state.lasers[m]) state.lasers[m] = {};
+  state.myStation = null;
+  showToast('Máquina liberada');
+  goHome();
+}
+
+function sendLaserMain(machineId) {
+  if (!state.lasers[machineId]) state.lasers[machineId] = {};
+  state.lasers[machineId][state.currentUser] = true;
+  showToast('⚡ Tag enviado anónimamente');
+  openMachine(machineId);
+}
+
+function sendLaserFromUser(machineId, btn) {
+  if (!state.lasers[machineId]) state.lasers[machineId] = {};
+  state.lasers[machineId][state.currentUser] = true;
+  btn.textContent = '⚡ Enviado';
+  btn.classList.add('sent');
+  btn.disabled = true;
+  showToast('⚡ Tag enviado anónimamente');
+  renderEquipGrid();
+  updateNotifBanner();
+}
+
+function goHome() {
+  showScreen('home');
+  renderHome();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+</script>
